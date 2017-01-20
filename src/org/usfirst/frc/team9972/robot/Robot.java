@@ -28,6 +28,7 @@ public class Robot extends IterativeRobot {
 
 	public void autonomousPeriodic() {
 		//	while(Timer.getMatchTime() < 3){
+		//while((imu.getAngleX()/4)<180){
 		  go.tankDrive(.4, .4);//slow but dangerous, fix
 		  SmartDashboard.putData("IMU", imu); 
 		  SmartDashboard.putNumber("Angle Y", imu.getAngleY()/4);
