@@ -5,12 +5,8 @@ import com.analog.adis16448.frc.ADIS16448_IMU;
 import edu.wpi.first.wpilibj.*;
 
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.interfaces.Accelerometer;
-import edu.wpi.first.wpilibj.interfaces.Accelerometer.Range;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.ADXRS450_Gyro;
-import edu.wpi.first.wpilibj.ADXL362;
 
 public class Robot extends IterativeRobot {
 	ADIS16448_IMU imu = new ADIS16448_IMU();
@@ -27,7 +23,7 @@ public class Robot extends IterativeRobot {
 	double setAngle_Straight = 0.0;
 	double setAngle_Turn = 0.0;
 	double turnSpeed = .5;
-		
+	
 	double driveStraightSpeed = 0.0;
 
 	double[] acceleration = new double[3];
@@ -96,22 +92,22 @@ public class Robot extends IterativeRobot {
 
 		right2IsPressed = rightJoy.getRawButton(2);
 		if (right2IsPressed && !right2PressedLastTime) {
-			double lastAngleZ = imu.getAngleZ();
-			
+			double lastAngleZ = imu.getAngleZ()/4;
 			while((imu.getAngleZ()/4) < lastAngleZ + 180){
 				  drive.tankDrive(turnSpeed, -turnSpeed);
-//				  SmartDashboard.putData("IMU", imu); 
-//				  SmartDashboard.putNumber("Angle Y", imu.getAngleY()/4);//For all angles, scale by dividing by 4 (ex: a 90 degree turn by the robot returns a Z angle change of 360)
-//				  SmartDashboard.putNumber("Angle X", imu.getAngleX()/4);
-//				  SmartDashboard.putNumber("Angle Z", imu.getAngleZ()/4);
-//				  SmartDashboard.putNumber("Acceleration X", imu.getAccelX());
-//				  SmartDashboard.putNumber("Acceleration Y", imu.getAccelY());
-//				  SmartDashboard.putNumber("Acceleration Z", imu.getAccelZ());
+				  SmartDashboard.putData("IMU", imu); 
+				  SmartDashboard.putNumber("Angle Y", imu.getAngleY()/4);//For all angles, scale by dividing by 4 (ex: a 90 degree turn by the robot returns a Z angle change of 360)
+				  SmartDashboard.putNumber("Angle X", imu.getAngleX()/4);
+				  SmartDashboard.putNumber("Angle Z", imu.getAngleZ()/4);
+				  SmartDashboard.putNumber("Acceleration X", imu.getAccelX());
+				  SmartDashboard.putNumber("Acceleration Y", imu.getAccelY());
+				  SmartDashboard.putNumber("Acceleration Z", imu.getAccelZ());
+				  SmartDashboard.putNumber("last angle z", lastAngleZ);
+				  
 			}
 		}
 		right2PressedLastTime = right2IsPressed;
-		
-		right3IsPressed = rightJoy.getRawButton(3);
+	/*	right3IsPressed = rightJoy.getRawButton(3);//doesn't work yet
 		if (right3IsPressed && !right3PressedLastTime) {//should return robot to original Z front facing position from teleOpInit
 			double rangedAngleZ = imu.getAngleZ()/4 % 360.0;//ranged angle is an angle within the range of -360 to 360
 			while(rangedAngleZ != initAngleZ){
@@ -123,6 +119,6 @@ public class Robot extends IterativeRobot {
 				}
 			}
 		}
-		right3PressedLastTime = right3IsPressed;
+		right3PressedLastTime = right3IsPressed;*/
 	}
 }
