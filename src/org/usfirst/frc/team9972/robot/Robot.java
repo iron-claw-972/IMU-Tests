@@ -19,17 +19,16 @@ public class Robot extends IterativeRobot {
 	Victor backLeftMotor = new Victor(1);
 	Victor frontRightMotor = new Victor(2);
 	Victor frontLeftMotor = new Victor(3);
-	
-	double setAngle_Straight = 0.0;
-	double setAngle_Turn = 0.0;
-	double turnSpeed = .5;
-	
-	double driveStraightSpeed = 0.0;
 
 	double[] acceleration = new double[3];
-
+	double turnSpeed = 0.5;
+	double lastAccelX = 0;
+	double lastVelocityX = 0;
+	double positionX = 0;
+	double velocityX = 0;
+	double lastTimeX = 0;//last time for calculating velocity and position
+	
 	RobotDrive drive = new RobotDrive(frontLeftMotor, backLeftMotor, frontRightMotor, backRightMotor);
-
 	boolean leftPressedLastTime = false;
 	boolean driveStraight = false;
 	
@@ -44,11 +43,13 @@ public class Robot extends IterativeRobot {
 	boolean tankDrive = true;
 	double initAngleX, initAngleY, initAngleZ;
 	
+	double startTime = 0;
 	public void teleopInit() {
-		imu.calibrate();
+//		imu.calibrate();
 		initAngleX = imu.getAngleX();
 		initAngleY = imu.getAngleY();
 		initAngleZ = imu.getAngleZ();
+		startTime = (double)(System.currentTimeMillis() / 1000);
 		/*
 		 * Graph gets all messed up if we move our robot before the graph calibrates.
 		 * We need to wait approx 3 seconds (not positive; it would be best to remeasure)
@@ -57,17 +58,23 @@ public class Robot extends IterativeRobot {
 		
 	}
 	public void autonomousPeriodic() {
-		  SmartDashboard.putData("IMU", imu); 
-		  SmartDashboard.putNumber("Angle Y", imu.getAngleY()/4);
-		  SmartDashboard.putNumber("Angle X", imu.getAngleX()/4);
-		  SmartDashboard.putNumber("Angle Z", imu.getAngleZ()/4);
-		  SmartDashboard.putNumber("Accel X", imu.getAccelX());
-		  SmartDashboard.putNumber("Accel Y", imu.getAccelY());
-		  SmartDashboard.putNumber("Accel Z", imu.getAccelZ());
+//		  SmartDashboard.putData("IMU", imu); 
+//		  SmartDashboard.putNumber("Angle Y", imu.getAngleY()/4);
+//		  SmartDashboard.putNumber("Angle X", imu.getAngleX()/4);
+//		  SmartDashboard.putNumber("Angle Z", imu.getAngleZ()/4);
+//		  SmartDashboard.putNumber("Accel X", imu.getAccelX());
+//		  SmartDashboard.putNumber("Accel Y", imu.getAccelY());
+//		  SmartDashboard.putNumber("Accel Z", imu.getAccelZ());
 		}
 	
 	public void teleopPeriodic() {
+		velocityX = velocityX + (lastAccelX + imu.getAccelX()) * 4.9 * (((double)(System.currentTimeMillis()/1000) - startTime) - lastTimeX) + .032;// add the trapezoid
+		// acceleration is measured in g's, so to get the average of the accelerations in m/s/s, multiply by 9.8 and divide by 2, .032 is the error in the IMU
+		lastAccelX = imu.getAccelX();
+		positionX = positionX + ((velocityX + lastVelocityX) /2) * (((double)(System.currentTimeMillis()/1000) - startTime) - lastTimeX);
+		lastTimeX = (double)(System.currentTimeMillis()/1000) - startTime;
 		
+				
 	    acceleration[0] = imu.getAccelX();// IMU not tested yet with acceleration
 		acceleration[1] = imu.getAccelY();
 		acceleration[2] = imu.getAccelZ();
@@ -78,35 +85,29 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putNumber("Angle X", imu.getAngleX()/4);//For all angles, scale by dividing by 4 (ex: a 90 degree turn by the robot returns a Z angle change of 360)
 		SmartDashboard.putNumber("Angle Y", imu.getAngleY()/4);
 		SmartDashboard.putNumber("Angle Z", imu.getAngleZ()/4);
-		
-		right1IsPressed = rightJoy.getRawButton(1);
-		if (right1IsPressed && !right1PressedLastTime) {
-			tankDrive = !tankDrive;
-		}
-		right1PressedLastTime = right1IsPressed;
+		SmartDashboard.putNumber("Velocity X", velocityX);
+		SmartDashboard.putNumber("Position X", positionX);
 
-		
 		if (tankDrive){
 			drive.tankDrive(-leftJoy.getY(), -rightJoy.getY()); //joysticks wrong sign
 		}
-
-		right2IsPressed = rightJoy.getRawButton(2);
-		if (right2IsPressed && !right2PressedLastTime) {
-			double lastAngleZ = imu.getAngleZ()/4;
-			while((imu.getAngleZ()/4) < lastAngleZ + 180){
-				  drive.tankDrive(turnSpeed, -turnSpeed);
-				  SmartDashboard.putData("IMU", imu); 
-				  SmartDashboard.putNumber("Angle Y", imu.getAngleY()/4);//For all angles, scale by dividing by 4 (ex: a 90 degree turn by the robot returns a Z angle change of 360)
-				  SmartDashboard.putNumber("Angle X", imu.getAngleX()/4);
-				  SmartDashboard.putNumber("Angle Z", imu.getAngleZ()/4);
-				  SmartDashboard.putNumber("Acceleration X", imu.getAccelX());
-				  SmartDashboard.putNumber("Acceleration Y", imu.getAccelY());
-				  SmartDashboard.putNumber("Acceleration Z", imu.getAccelZ());
-				  SmartDashboard.putNumber("last angle z", lastAngleZ);
-				  
-			}
-		}
-		right2PressedLastTime = right2IsPressed;
+//		
+//		right2IsPressed = rightJoy.getRawButton(2);
+//		if (right2IsPressed && !right2PressedLastTime) {
+//			double lastAngleZ = imu.getAngleZ()/4;
+//			if((imu.getAngleZ()/4) < lastAngleZ + 180){
+//				  drive.tankDrive(turnSpeed, -turnSpeed);
+//				  SmartDashboard.putData("IMU", imu); 
+//				  SmartDashboard.putNumber("Angle Y", imu.getAngleY()/4);//For all angles, scale by dividing by 4 (ex: a 90 degree turn by the robot returns a Z angle change of 360)
+//				  SmartDashboard.putNumber("Angle X", imu.getAngleX()/4);
+//				  SmartDashboard.putNumber("Angle Z", imu.getAngleZ()/4);
+//				  SmartDashboard.putNumber("Acceleration X", imu.getAccelX());
+//				  SmartDashboard.putNumber("Acceleration Y", imu.getAccelY());
+//				  SmartDashboard.putNumber("Acceleration Z", imu.getAccelZ());
+//				  SmartDashboard.putNumber("last angle z", lastAngleZ);
+//			}
+//		}
+//		right2PressedLastTime = right2IsPressed;
 	/*	right3IsPressed = rightJoy.getRawButton(3);//doesn't work yet
 		if (right3IsPressed && !right3PressedLastTime) {//should return robot to original Z front facing position from teleOpInit
 			double rangedAngleZ = imu.getAngleZ()/4 % 360.0;//ranged angle is an angle within the range of -360 to 360
